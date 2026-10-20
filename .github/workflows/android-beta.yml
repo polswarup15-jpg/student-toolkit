@@ -30,6 +30,19 @@ jobs:
           gradle-version: '8.9'
       - name: Build debug APK
         run: gradle :app:assembleDebug --no-daemon
+      - name: Validate generated APK
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          echo "APK bytes: $(stat -c%s "$APK")"
+          unzip -t "$APK"
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          AAPT="$(find "$SDK/build-tools" -maxdepth 2 -type f -name aapt -print | sort -V | tail -1)"
+          APKSIGNER="$(find "$SDK/build-tools" -maxdepth 2 -type f -name apksigner -print | sort -V | tail -1)"
+          test -n "$AAPT" && test -n "$APKSIGNER"
+          "$AAPT" dump badging "$APK" | head -15
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
       - name: Upload beta APK
         uses: actions/upload-artifact@v4
         with:
