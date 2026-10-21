@@ -26,6 +26,7 @@ public class Store extends SQLiteOpenHelper {
  public int focusSessionsLastSevenDays(){long since=System.currentTimeMillis()-7L*24*60*60*1000;try(Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM focus_sessions WHERE completed_at>=?",new String[]{String.valueOf(since)})){c.moveToFirst();return c.getInt(0);}}
  public long verifiedStudySeconds(){try(Cursor c=getReadableDatabase().rawQuery("SELECT COALESCE(SUM(CASE WHEN duration_seconds>0 THEN duration_seconds ELSE minutes*60 END),0) FROM focus_sessions WHERE verified=1",null)){c.moveToFirst();return c.getLong(0);}}
  public int pendingHomework(){try(Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM homework WHERE done=0",null)){c.moveToFirst();return c.getInt(0);}}
- public Cursor upcomingHomework(){return getReadableDatabase().rawQuery("SELECT title,subject,due FROM homework WHERE done=0 AND due IS NOT NULL AND due<>'' ORDER BY due ASC,_id ASC LIMIT 5",null);}
+ public int overdueHomework(){String today=java.time.LocalDate.now().toString();try(Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM homework WHERE done=0 AND due IS NOT NULL AND due<>'' AND due<?",new String[]{today})){c.moveToFirst();return c.getInt(0);}}
+ public Cursor upcomingHomework(){String today=java.time.LocalDate.now().toString();return getReadableDatabase().rawQuery("SELECT title,subject,due FROM homework WHERE done=0 AND due IS NOT NULL AND due<>'' AND due>=? ORDER BY due ASC,_id ASC LIMIT 5",new String[]{today});}
  public void setDone(long id,boolean done){ContentValues v=new ContentValues();v.put("done",done?1:0);getWritableDatabase().update("homework",v,"_id=?",new String[]{String.valueOf(id)});}
 }
