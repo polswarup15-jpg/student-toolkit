@@ -55,7 +55,16 @@ jobs:
             adb wait-for-device
             adb shell getprop sys.boot_completed
             adb shell input keyevent 82
-            gradle :app:connectedDebugAndroidTest --no-daemon --stacktrace --info 2>&1 | tee instrumentation.log
+            echo "=== Run Settings + Privacy in isolation ==="
+            gradle :app:connectedDebugAndroidTest --no-daemon --stacktrace --info -Pandroid.testInstrumentationRunnerArguments.class=com.studenttoolkit.app.SettingsPrivacyTest 2>&1 | tee instrumentation.log
+            SETTINGS_RESULT=${PIPESTATUS[0]}
+            if [ "$SETTINGS_RESULT" -eq 0 ]; then
+              echo "=== Run complete instrumentation suite ===" | tee -a instrumentation.log
+              gradle :app:connectedDebugAndroidTest --no-daemon --stacktrace --info 2>&1 | tee -a instrumentation.log
+            else
+              echo "Settings test failed; preserving isolated failure diagnostics" | tee -a instrumentation.log
+              false
+            fi
             RESULT=${PIPESTATUS[0]}
             if [ "$RESULT" -ne 0 ]; then
               echo "=== Instrumentation crash diagnostics ==="
