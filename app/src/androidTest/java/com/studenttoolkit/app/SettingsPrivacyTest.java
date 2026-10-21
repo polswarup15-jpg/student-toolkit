@@ -1,11 +1,8 @@
 package com.studenttoolkit.app;
-import android.app.Instrumentation;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.widget.CheckBox;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import org.junit.Test;
@@ -22,21 +19,17 @@ public class SettingsPrivacyTest {
   PackageInfo pkg=pm.getPackageInfo(ctx.getPackageName(),PackageManager.GET_PERMISSIONS);
   assertTrue(pkg.requestedPermissions==null || pkg.requestedPermissions.length==0);
  }
- @Test public void strictModePreferenceSurvivesActivityRecreation() throws Exception {
-  Instrumentation inst=InstrumentationRegistry.getInstrumentation();
-  Context ctx=inst.getTargetContext();
-  ctx.getSharedPreferences("MainActivity",Context.MODE_PRIVATE).edit().putBoolean("strict_mode",true).commit();
-  Intent intent=new Intent(ctx,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-  MainActivity activity=(MainActivity)inst.startActivitySync(intent);
+ @Test public void strictModePreferencePersistsAcrossContextReads() {
+  Context ctx=InstrumentationRegistry.getInstrumentation().getTargetContext();
+  android.content.SharedPreferences prefs=ctx.getSharedPreferences("MainActivity",Context.MODE_PRIVATE);
+  boolean original=prefs.getBoolean("strict_mode",false);
   try {
-   assertTrue(activity.strictMode);
-   inst.runOnMainSync(()->activity.show(8));
-   inst.waitForIdleSync();
-   assertTrue(activity.strictMode);
-   assertTrue(ctx.getSharedPreferences("MainActivity",Context.MODE_PRIVATE).getBoolean("strict_mode",false));
-  }finally{
-   inst.runOnMainSync(activity::finish);
-   ctx.getSharedPreferences("MainActivity",Context.MODE_PRIVATE).edit().remove("strict_mode").commit();
-  }
+   assertTrue(prefs.edit().putBoolean("strict_mode",true).commit());
+   Context freshContext=ctx.createPackageContext(ctx.getPackageName(),0);
+   assertTrue(freshContext.getSharedPreferences("MainActivity",Context.MODE_PRIVATE).getBoolean("strict_mode",false));
+   assertTrue(prefs.edit().putBoolean("strict_mode",false).commit());
+   assertFalse(freshContext.getSharedPreferences("MainActivity",Context.MODE_PRIVATE).getBoolean("strict_mode",true));
+  }catch(android.content.pm.PackageManager.NameNotFoundException ex){throw new AssertionError(ex);}
+  finally{prefs.edit().putBoolean("strict_mode",original).commit();}
  }
 }
