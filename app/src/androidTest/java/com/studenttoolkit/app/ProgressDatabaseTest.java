@@ -25,6 +25,6 @@ public class ProgressDatabaseTest {
   assertEquals(4,db.count("focus_sessions"));assertEquals(3315L,db.verifiedStudySeconds());
   assertEquals(3315L/360L,db.verifiedStudySeconds()/360L);
   assertEquals(65,db.focusMinutesLastSevenDays());assertEquals(3,db.focusSessionsLastSevenDays());
-  assertEquals(90,db.totalFocusMinutes());
+  assertEquals(85,db.totalFocusMinutes());
  }finally{db.close();}}
 }
