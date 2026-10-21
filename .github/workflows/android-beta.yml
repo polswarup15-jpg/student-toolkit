@@ -43,14 +43,14 @@ jobs:
           test -n "$AAPT" && test -n "$APKSIGNER"
           "$AAPT" dump badging "$APK" | head -15
           "$APKSIGNER" verify --verbose --print-certs "$APK"
-      - name: Run Subjects instrumentation tests on Android emulator
+      - name: Run all instrumentation tests on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: gradle :app:connectedDebugAndroidTest --no-daemon
+          script: gradle :app:connectedDebugAndroidTest --no-daemon --stacktrace
       - name: Upload beta APK
         uses: actions/upload-artifact@v4
         with:
