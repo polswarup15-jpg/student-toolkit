@@ -50,7 +50,30 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: gradle :app:connectedDebugAndroidTest --no-daemon --stacktrace
+          script: |
+            set -o pipefail
+            adb wait-for-device
+            adb shell getprop sys.boot_completed
+            adb shell input keyevent 82
+            gradle :app:connectedDebugAndroidTest --no-daemon --stacktrace --info 2>&1 | tee instrumentation.log
+            RESULT=${PIPESTATUS[0]}
+            if [ "$RESULT" -ne 0 ]; then
+              echo "=== Instrumentation crash diagnostics ==="
+              adb logcat -d -t 1500 -v time | grep -E -A 12 -B 8 'FATAL EXCEPTION|AndroidRuntime|INSTRUMENTATION_FAILED|Process crashed|com.studenttoolkit.app|TestRunner' | tail -350 || true
+              echo "=== Test result files ==="
+              find app/build/outputs/androidTest-results app/build/reports/androidTests -type f 2>/dev/null | sort || true
+            fi
+            exit "$RESULT"
+      - name: Upload instrumentation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumentation-diagnostics
+          path: |
+            instrumentation.log
+            app/build/outputs/androidTest-results/
+            app/build/reports/androidTests/
+          if-no-files-found: warn
       - name: Upload beta APK
         uses: actions/upload-artifact@v4
         with:
