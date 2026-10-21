@@ -15,7 +15,7 @@ public class Store extends SQLiteOpenHelper {
  public void recordStudy(String subject,String mode,int seconds){if(subject==null||subject.trim().isEmpty()||seconds<600)return;ContentValues v=new ContentValues();v.put("minutes",seconds/60);v.put("duration_seconds",seconds);v.put("subject",subject.trim());v.put("timer_mode",mode);v.put("verified",1);v.put("completed_at",System.currentTimeMillis());getWritableDatabase().insertOrThrow("focus_sessions",null,v);}
  public Cursor subjectsForTimer(){return getReadableDatabase().rawQuery("SELECT name FROM subjects WHERE TRIM(name)<>'' ORDER BY name COLLATE NOCASE",null);}
  public void add(String table,ContentValues values){getWritableDatabase().insertOrThrow(table,null,values);}
- public Cursor all(String table){return getReadableDatabase().rawQuery("SELECT * FROM "+table+" ORDER BY _id DESC",null);}
+ public Cursor all(String table){String order=table.equals("exams")?"date ASC,_id ASC":table.equals("timetable")?"CASE day WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3 WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6 WHEN 'Sunday' THEN 7 ELSE 8 END,time ASC":"_id DESC";return getReadableDatabase().rawQuery("SELECT * FROM "+table+" ORDER BY "+order,null);}
  public Cursor one(String table,long id){return getReadableDatabase().query(table,null,"_id=?",new String[]{String.valueOf(id)},null,null,null);}
  public void update(String table,long id,ContentValues values){getWritableDatabase().update(table,values,"_id=?",new String[]{String.valueOf(id)});}
  public int count(String table){try(Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM "+table,null)){c.moveToFirst();return c.getInt(0);}}
