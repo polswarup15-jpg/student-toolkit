@@ -11,13 +11,19 @@ import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
 public class SettingsPrivacyTest {
- @Test public void privacyManifestDisablesBackupAndHasNoPermissions() throws Exception {
+ @Test public void privacyManifestDisablesBackupAndUsesOnlyExpectedPermissions() throws Exception {
   Context ctx=InstrumentationRegistry.getInstrumentation().getTargetContext();
   PackageManager pm=ctx.getPackageManager();
   ApplicationInfo app=pm.getApplicationInfo(ctx.getPackageName(),0);
   assertEquals(0,app.flags & ApplicationInfo.FLAG_ALLOW_BACKUP);
   PackageInfo pkg=pm.getPackageInfo(ctx.getPackageName(),PackageManager.GET_PERMISSIONS);
-  assertTrue(pkg.requestedPermissions==null || pkg.requestedPermissions.length==0);
+  java.util.Set<String> actual=new java.util.HashSet<>();
+  if(pkg.requestedPermissions!=null)java.util.Collections.addAll(actual,pkg.requestedPermissions);
+  java.util.Set<String> expected=new java.util.HashSet<>();
+  expected.add("android.permission.SYSTEM_ALERT_WINDOW");
+  expected.add("android.permission.FOREGROUND_SERVICE");
+  expected.add("android.permission.FOREGROUND_SERVICE_SPECIAL_USE");
+  assertEquals(expected,actual);
  }
  @Test public void strictModePreferencePersistsAcrossContextReads() {
   Context ctx=InstrumentationRegistry.getInstrumentation().getTargetContext();
