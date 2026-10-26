@@ -15,6 +15,8 @@ else
   echo "Settings test failed; preserving isolated failure diagnostics" | tee -a instrumentation.log
   RESULT="$SETTINGS_RESULT"
 fi
+echo "=== Emulator performance baseline (informational; not device certification) ===" | tee -a instrumentation.log
+adb logcat -d -v brief -s ST_PERF_BASELINE:I "*:S" | tee performance-baseline.log || true
 if [ "$RESULT" -ne 0 ]; then
   echo "=== Instrumentation crash diagnostics ==="
   adb logcat -d -t 1500 -v time | grep -E -A 12 -B 8 'FATAL EXCEPTION|AndroidRuntime|INSTRUMENTATION_FAILED|Process crashed|com.studenttoolkit.app|TestRunner' | tail -350 || true
