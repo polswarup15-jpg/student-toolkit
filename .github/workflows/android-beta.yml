@@ -64,6 +64,7 @@ jobs:
           name: instrumentation-diagnostics
           path: |
             instrumentation.log
+            performance-baseline.log
             app/build/outputs/androidTest-results/
             app/build/reports/androidTests/
           if-no-files-found: warn
