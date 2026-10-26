@@ -3,7 +3,7 @@ name: Student Toolkit Beta APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, quality-benchmarks-v1]
 
 jobs:
   build:
@@ -28,6 +28,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Enforce static V1 quality gates
+        run: python3 .github/scripts/quality-gates.py
       - name: Build debug APK
         run: gradle :app:assembleDebug --no-daemon
       - name: Validate generated APK
@@ -35,6 +37,7 @@ jobs:
           set -euo pipefail
           APK="app/build/outputs/apk/debug/app-debug.apk"
           test -s "$APK"
+          test "$(stat -c%s "$APK")" -gt 100000
           echo "APK bytes: $(stat -c%s "$APK")"
           unzip -t "$APK"
           SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
