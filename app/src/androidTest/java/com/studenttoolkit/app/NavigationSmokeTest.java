@@ -20,6 +20,17 @@ public class NavigationSmokeTest {
         try {
             instrumentation.waitForIdleSync();
             assertEquals("Dashboard", activity.pages[activity.page]);
+            final String[] primaryLabels = {"Homework", "Timetable", "Dashboard", "Profile"};
+            final int[] primaryDestinations = {2, 4, 0, 9};
+            for (int tab = 0; tab < primaryLabels.length; tab++) {
+                final int selectedTab = tab;
+                instrumentation.runOnMainSync(() -> activity.nav.getChildAt(selectedTab).performClick());
+                instrumentation.waitForIdleSync();
+                assertEquals("Primary tab opens wrong screen", primaryDestinations[tab], activity.page);
+                TextView item = (TextView) activity.nav.getChildAt(tab);
+                assertTrue("Primary tab label missing", item.getText().toString().contains(primaryLabels[tab]));
+                assertEquals("Primary tab accessibility label incorrect", "Open " + primaryLabels[tab], item.getContentDescription().toString());
+            }
             for (int index = 0; index < activity.pages.length; index++) {
                 final int destination = index;
                 instrumentation.runOnMainSync(() -> activity.show(destination));
