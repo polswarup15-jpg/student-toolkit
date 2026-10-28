@@ -27,6 +27,11 @@ final class FocusClock {
             if(breakTime) remaining=Math.max(0,remaining-delta);
             else if(STOPWATCH.equals(mode)) elapsed+=delta;
             else {long credited=Math.min(delta,remaining);elapsed+=credited;remaining-=credited;}
+            if (!STOPWATCH.equals(mode) && remaining==0) {
+                running=false;
+                p.edit().putBoolean("running",false).putLong("elapsed",elapsed)
+                    .putLong("remaining",0).commit();
+            }
         }
         return new State(mode,subject,running,breakTime,elapsed,remaining);
     }
